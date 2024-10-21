@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/diffui/static/css/main.aa421a40.css",
+    "main.js": "/diffui/static/js/main.9c5786cb.js",
+    "index.html": "/diffui/index.html",
+    "main.aa421a40.css.map": "/diffui/static/css/main.aa421a40.css.map",
+    "main.9c5786cb.js.map": "/diffui/static/js/main.9c5786cb.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.aa421a40.css",
+    "static/js/main.9c5786cb.js"
+  ]
+}
