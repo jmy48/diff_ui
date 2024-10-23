@@ -71,7 +71,7 @@ export function Betslip(props: any) {
         <Button
           variant="contained"
           onClick={handleSubmit}
-          disabled={betslipStatus !== "Ready" || size < 0 || !selectedOutcome || selectedOutcome.book !== "betonline"}
+          disabled={betslipStatus !== "Ready" || size < 0 || !selectedOutcome || selectedOutcome.book !== "betonline" || selectedOutcome.book !== "bovada"}
           sx={{
             backgroundColor: '#16a34a', // Tailwind's blue-500
             minWidth: 'auto',

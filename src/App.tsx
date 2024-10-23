@@ -67,7 +67,7 @@ const App: React.FC = () => {
   const [selectedLeague, setSelectedLeague] = useState<string>("");
   const [selectedWeak, setSelectedWeak] = useState<string>("betonline");
 
-  const [inputWsUrl, setInputWsUrl] = useState<string>("ws://localhost:8080");
+  const [inputWsUrl, setInputWsUrl] = useState<string>("ws://localhost:8080"); //  https://d323-45-139-48-250.ngrok-free.app
   const [connectedWsUrl, setConnectedWsUrl] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -90,10 +90,6 @@ const App: React.FC = () => {
     if (wsRef.current) {
       wsRef.current.send(JSON.stringify({ league: selectedKey }));
     }
-  };
-
-  const handleWeakSelection = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedKey = event.target.value;
   };
 
   games.sort((a, b) => {
