@@ -1,12 +1,16 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { GameScreen } from './GameScreen';
 import StatusBar from './WsStatusBar'; // Import the StatusBar component
+import Betslip, { Outcome, Price, priceToString } from './Betslip';
+import GameScreens from './GameScreens';
 
 export function connect(inputWsUrl: string,
   wsRef: React.MutableRefObject<WebSocket | null>,
   setConnectedWsUrl: React.Dispatch<React.SetStateAction<string | null>>,
   setGames: React.Dispatch<React.SetStateAction<any[]>>,
-  setPong: React.Dispatch<React.SetStateAction<any>>) {
+  setPong: React.Dispatch<React.SetStateAction<any>>,
+  setBetslipStatus: React.Dispatch<React.SetStateAction<string>>,
+  setBetslipResult: React.Dispatch<React.SetStateAction<string>>,
+) {
 
   var websocket = new WebSocket(inputWsUrl);
   var pingInterval: NodeJS.Timeout;
@@ -42,6 +46,9 @@ export function connect(inputWsUrl: string,
       setGames(data.games);
     } else if (data.action === 'pong') {
       setPong(data);
+    } else if (data.action === 'bet_result') {
+      setBetslipResult(data.result);
+      setBetslipStatus("Ready");
     }
   };
 
@@ -49,7 +56,7 @@ export function connect(inputWsUrl: string,
     clearInterval(pingInterval!);
     if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
       setConnectedWsUrl(null);
-      connect(inputWsUrl, wsRef, setConnectedWsUrl, setGames, setPong);
+      connect(inputWsUrl, wsRef, setConnectedWsUrl, setGames, setPong, setBetslipStatus, setBetslipResult);
     }
   };
 };
@@ -58,15 +65,21 @@ const App: React.FC = () => {
   const [games, setGames] = useState<any[]>([]);
   const [pong, setPong] = useState<any>();
   const [selectedLeague, setSelectedLeague] = useState<string>("");
+  const [selectedWeak, setSelectedWeak] = useState<string>("betonline");
 
   const [inputWsUrl, setInputWsUrl] = useState<string>("ws://localhost:8080");
   const [connectedWsUrl, setConnectedWsUrl] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
+  const [selectedOutcome, setSelectedOutcome] = useState<Outcome | null>(null);
+  const [selectedPrice, setSelectedPrice] = useState<Price | null>(null);
+  const [betslipStatus, setBetslipStatus] = useState<string>("Ready"); // "Ready" or "Betting {x}"
+  const [betslipResult, setBetslipResult] = useState<string>(""); // ""
+
   useEffect(() => {
     if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED || inputWsUrl !== connectedWsUrl) {
       try {
-        connect(inputWsUrl, wsRef, setConnectedWsUrl, setGames, setPong);
+        connect(inputWsUrl, wsRef, setConnectedWsUrl, setGames, setPong, setBetslipStatus, setBetslipResult);
       } catch (error) {}
     }
   }, [inputWsUrl]);
@@ -79,6 +92,10 @@ const App: React.FC = () => {
     }
   };
 
+  const handleWeakSelection = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedKey = event.target.value;
+  };
+
   games.sort((a, b) => {
     const num_alive_diff = Object.keys(b.book_detection_spans).length - Object.keys(a.book_detection_spans).length
     if (num_alive_diff === 0) {
@@ -86,6 +103,27 @@ const App: React.FC = () => {
     }
     return num_alive_diff;
   })
+
+  const sendSignal = (size: number) => {
+    if (!wsRef.current) {
+      setBetslipResult("Autobettor not connected.");
+      return;
+    }
+    if (!selectedOutcome || !selectedPrice) {
+      setBetslipResult("Outcome not selected.");
+      return;
+    }
+    wsRef.current.send(JSON.stringify({
+      signal: {book: selectedOutcome.book,
+      game_id: selectedOutcome.game_id,
+      market: selectedOutcome.market,
+      outcome_index: selectedOutcome.outcome_index,
+      price: selectedPrice,
+      size: size,
+      ts: Date.now()
+    }}))
+    setBetslipStatus(`...`)
+  }
 
   return (
     <div className="bg-[#05131F] text-gray-200 w-full h-full min-w-screen min-h-screen">
@@ -95,25 +133,54 @@ const App: React.FC = () => {
         connectedWsUrl={connectedWsUrl}
         pong={pong}
       />
-      <select
-        id="league-select"
-        onChange={handleLeagueSelection}
-        className="bg-black m-4"
-        value={selectedLeague || ''}
-      >
-        <option value="" disabled>
-          league
-        </option>
-        {["nba", "mlb", "nfl", "esports"]
-          .map((league) => (
-            <option key={league} value={league}>
-              {league}
-            </option>
-          ))}
-      </select>
-      {games && 
-        games.map((game) => <GameScreen game={game} weak={"betonline"}></GameScreen>)
-      }
+      <Betslip
+        selectedOutcome={selectedOutcome}
+        selectedPrice={selectedPrice}
+        betslipStatus={betslipStatus}
+        betslipResult={betslipResult}
+        setBetslipResult={setBetslipResult}
+        sendSignal={sendSignal}
+      />
+      <div className="flex flex-row">
+        <select
+          id="league-select"
+          onChange={handleLeagueSelection}
+          className="bg-black m-4 p-1"
+          value={selectedLeague || ''}
+        >
+          <option value="" disabled>
+            league
+          </option>
+          {["nba", "mlb", "nfl", "esports", "mexico_lmb"]
+            .map((league) => (
+              <option key={league} value={league}>
+                {league}
+              </option>
+            ))}
+        </select>
+        <select
+          onChange={(event) => setSelectedWeak(event.target.value)}
+          className="bg-black m-4 p-1"
+          value={selectedWeak || ''}
+        >
+          <option value="" disabled>
+            weak
+          </option>
+          {["betonline", "betcris", "bovada", "fanduel", "pinnacle", "bet365", "caesars"]
+            .map((league) => (
+              <option key={league} value={league}>
+                {league}
+              </option>
+            ))}
+        </select>
+      </div>
+      {games && <GameScreens
+        games={games}
+        weak={selectedWeak}
+        setSelectedOutcome={setSelectedOutcome}
+        selectedOutcome={selectedOutcome}
+        setSelectedPrice={setSelectedPrice}
+      />}
     </div>
   );
 };

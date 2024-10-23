@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/diff_ui/static/css/main.aa421a40.css",
+    "main.js": "/diff_ui/static/js/main.9c5786cb.js",
+    "index.html": "/diff_ui/index.html",
+    "main.aa421a40.css.map": "/diff_ui/static/css/main.aa421a40.css.map",
+    "main.9c5786cb.js.map": "/diff_ui/static/js/main.9c5786cb.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.aa421a40.css",
+    "static/js/main.9c5786cb.js"
+  ]
+}

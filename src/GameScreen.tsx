@@ -1,12 +1,43 @@
 import React, { useEffect, useState } from 'react';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 
-export function GameScreen(props: any) {
-    const { game, weak } = props;
+function GameScreen(props: any) {
+    const { game, weak, setSelectedOutcome, selectedOutcome, setSelectedPrice } = props;
 
-    // console.log(game);
+    const handleCellClick = (params: any) => {
+        // console.log('Clicked cell:', params);
+        // console.log('Row data:', params.row);
+        // console.log('Column:', params.field);
+        // console.log('Cell value:', params.value);
 
-    // Define columns
+        const price = params.row[params.field].price;
+        if (price.odds === 0 || price.status === "offline") {
+            return;
+        }
+        const market = params.field.slice(0, -1)
+        const outcome_index = (params.field.slice(-1) === '1') ? 0 : 1
+
+        // get display str:
+        var display;
+        if (market === "moneyline" || market === "spread") {
+            const comp_tokens = game.id.split("__")[outcome_index].split(",")
+            display = comp_tokens[comp_tokens.length - 1]
+        } else {
+            display = displayGame(game, false);
+        }
+
+
+        setSelectedOutcome({
+            book: params.id,
+            game_id: game.id,
+            market: market,
+            outcome_index: outcome_index,
+            display: `(${params.id}) ${display}`
+        })
+
+        setSelectedPrice(price)
+    };
+
     var cols: GridColDef[] = [
         { field: 'book', headerName: 'Book', width: 150, cellClassName: (params) => {
             return params.value.includes(weak) ? 'weak-cell' : '';
@@ -63,9 +94,23 @@ export function GameScreen(props: any) {
             const prices2 = market.prices2;
             if (!(book in prices1)) continue;
 
-
             const bookprices1 = prices1[book]!;
             const bookprices2 = prices2[book]!;
+
+            const price1 = bookprices1[bookprices1.length - 1]
+            const price2 = bookprices2[bookprices2.length - 1]
+
+            if (selectedOutcome 
+                && selectedOutcome.game_id === game.game_id 
+                && selectedOutcome.book === book
+                && selectedOutcome.market === market_id.slice(0, -1)
+            ) {
+                if (selectedOutcome.outcome_index === 0) {
+                    setSelectedPrice(price1)
+                } else {
+                    setSelectedPrice(price2)
+                }
+            }
 
             var className1, className2;
             if (comparison_book in prices1) {
@@ -75,21 +120,23 @@ export function GameScreen(props: any) {
                 const comparison_price2 = comparison_prices2[comparison_prices2.length - 1]
 
                 if (market_id === "moneyline") {
-                    className1 = comparePrices(comparison_price1, bookprices2[bookprices2.length - 1])
-                    className2 = comparePrices(comparison_price2, bookprices1[bookprices1.length - 1])
+                    className1 = comparePrices(comparison_price1, price2)
+                    className2 = comparePrices(comparison_price2, price1)
                 } else {
-                    className1 = comparePrices(comparison_price1, bookprices1[bookprices1.length - 1])
-                    className2 = comparePrices(comparison_price2, bookprices2[bookprices2.length - 1])
+                    className1 = comparePrices(comparison_price1, price1)
+                    className2 = comparePrices(comparison_price2, price2)
                 }
             }
 
             row[`${market_id}1`] = {
-                display: formatPrice(bookprices1[bookprices1.length - 1]),
-                className: className1
+                display: formatPrice(price1),
+                className: className1,
+                price: price1
             };
             row[`${market_id}2`] = {
-                display: formatPrice(bookprices2[bookprices2.length - 1]),
-                className: className2
+                display: formatPrice(price2),
+                className: className2,
+                price: price2
             };
         }
 
@@ -110,7 +157,9 @@ export function GameScreen(props: any) {
     return (
         <div className={`text-gray-200 bg-[${dark}] my-4`}>
             <p className="px-4">{displayGame(game)}</p>
-            <DataGrid rows={rows} columns={cols} getRowHeight={() => 'auto'} hideFooter autoHeight sx={{
+            <DataGrid rows={rows} columns={cols} getRowHeight={() => 'auto'} hideFooter autoHeight
+                onCellClick={(params) => handleCellClick(params)}  // Add the event handler here
+                sx={{
                     '& .MuiDataGrid-root': {
                         color: light,  // Text color
                         backgroundColor: dark,  // Background color
@@ -163,12 +212,15 @@ function capitalize(str: string): string {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }  
 
-function displayGame(game: any) {
+function displayGame(game: any, show_time=true) {
     const tokens = game.id.split("__");
     const comp1_tokens = tokens[0].split("_")
     const comp2_tokens = tokens[1].split("_")
     const comp1 = comp1_tokens[comp1_tokens.length - 1]
     const comp2 = comp2_tokens[comp2_tokens.length - 1]
+    if (!show_time) {
+        return `${capitalize(comp1)} vs. ${capitalize(comp2)}`
+    }
     return `${capitalize(comp1)} vs. ${capitalize(comp2)} (${new Date(game.first_detected).toLocaleString()})`
 }
 
@@ -255,3 +307,6 @@ export function american_to_decimal(odds: number) {
 export function arb_diff(a: number, b: number) {
     return (american_to_decimal(a) - 1) * (american_to_decimal(b) - 1) - 1
 }
+
+
+export default React.memo(GameScreen);

@@ -11,7 +11,7 @@ interface StatusBarProps {
 const StatusBar: React.FC<StatusBarProps> = ({ inputWsUrl, setInputWsUrl, connectedWsUrl, pong }) => {
     // console.log("StatusBar connectedWsUrl: ", connectedWsUrl);
   return (
-    <div className="bg-gray-800 p-4 flex items-center">
+    <div className="bg-slate-800 p-2 flex items-center">
       <input
         type="text"
         value={inputWsUrl}
@@ -35,4 +35,4 @@ const StatusBar: React.FC<StatusBarProps> = ({ inputWsUrl, setInputWsUrl, connec
   );
 };
 
-export default StatusBar;
+export default React.memo(StatusBar);
