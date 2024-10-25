@@ -67,7 +67,7 @@ const App: React.FC = () => {
   const [selectedLeague, setSelectedLeague] = useState<string>("");
   const [selectedWeak, setSelectedWeak] = useState<string>("betonline");
 
-  const [inputWsUrl, setInputWsUrl] = useState<string>("ws://localhost:8080"); //  https://d323-45-139-48-250.ngrok-free.app
+  const [inputWsUrl, setInputWsUrl] = useState<string>("wss://diffui.duckdns.org"); // ws://localhost:8080 
   const [connectedWsUrl, setConnectedWsUrl] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 

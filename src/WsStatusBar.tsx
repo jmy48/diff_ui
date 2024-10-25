@@ -24,7 +24,7 @@ const StatusBar: React.FC<StatusBarProps> = ({ inputWsUrl, setInputWsUrl, connec
           connectedWsUrl ? 'text-green-400' : 'text-yellow-400 animate-pulse'
         }`}
       >
-        {connectedWsUrl ? `Connected` : 'Connecting...' /** to: ${connectedWsUrl} */}
+        {connectedWsUrl ? `Connected ${connectedWsUrl}` : 'Connecting...' /**  */}
       </p>
       <p
         className={`ml-4 text-sm text-green-300`}
