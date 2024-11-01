@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import StatusBar from './WsStatusBar'; // Import the StatusBar component
-import Betslip, { Outcome, Price, priceToString } from './Betslip';
+import Betslip, { Outcome, Price } from './Betslip';
 import GameScreens from './GameScreens';
+import BetsTable from './BetsTable';
 
 export function connect(inputWsUrl: string,
   wsRef: React.MutableRefObject<WebSocket | null>,
@@ -10,6 +11,7 @@ export function connect(inputWsUrl: string,
   setPong: React.Dispatch<React.SetStateAction<any>>,
   setBetslipStatus: React.Dispatch<React.SetStateAction<string>>,
   setBetslipResult: React.Dispatch<React.SetStateAction<string>>,
+  setBets: React.Dispatch<React.SetStateAction<any[]>>
 ) {
 
   var websocket = new WebSocket(inputWsUrl);
@@ -49,6 +51,9 @@ export function connect(inputWsUrl: string,
     } else if (data.action === 'bet_result') {
       setBetslipResult(data.result);
       setBetslipStatus("Ready");
+    } else if (data.action === 'bets') {
+      console.log(data.bets);
+      setBets(data.bets)
     }
   };
 
@@ -56,7 +61,7 @@ export function connect(inputWsUrl: string,
     clearInterval(pingInterval!);
     if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
       setConnectedWsUrl(null);
-      connect(inputWsUrl, wsRef, setConnectedWsUrl, setGames, setPong, setBetslipStatus, setBetslipResult);
+      connect(inputWsUrl, wsRef, setConnectedWsUrl, setGames, setPong, setBetslipStatus, setBetslipResult, setBets);
     }
   };
 };
@@ -66,8 +71,9 @@ const App: React.FC = () => {
   const [pong, setPong] = useState<any>();
   const [selectedLeague, setSelectedLeague] = useState<string>("");
   const [selectedWeak, setSelectedWeak] = useState<string>("betonline");
+  const [bets, setBets] = useState<any[]>([]);
 
-  const [inputWsUrl, setInputWsUrl] = useState<string>("wss://diffui.duckdns.org"); // ws://localhost:8080 
+  const [inputWsUrl, setInputWsUrl] = useState<string>("ws://localhost:8080"); // wss://diffui.duckdns.org
   const [connectedWsUrl, setConnectedWsUrl] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -79,7 +85,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED || inputWsUrl !== connectedWsUrl) {
       try {
-        connect(inputWsUrl, wsRef, setConnectedWsUrl, setGames, setPong, setBetslipStatus, setBetslipResult);
+        connect(inputWsUrl, wsRef, setConnectedWsUrl, setGames, setPong, setBetslipStatus, setBetslipResult, setBets);
       } catch (error) {}
     }
   }, [inputWsUrl]);
@@ -136,6 +142,9 @@ const App: React.FC = () => {
         betslipResult={betslipResult}
         setBetslipResult={setBetslipResult}
         sendSignal={sendSignal}
+      />
+      <BetsTable
+        bets={bets}
       />
       <div className="flex flex-row">
         <select

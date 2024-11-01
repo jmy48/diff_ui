@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { displayGame, displayOutcome, formatPrice } from './utils';
 
 function GameScreen(props: any) {
     const { game, weak, setSelectedOutcome, selectedOutcome, setSelectedPrice } = props;
@@ -18,21 +19,14 @@ function GameScreen(props: any) {
         const outcome_index = (params.field.slice(-1) === '1') ? 0 : 1
 
         // get display str:
-        var display;
-        if (market === "moneyline" || market === "spread") {
-            const comp_tokens = game.id.split("__")[outcome_index].split(",")
-            display = comp_tokens[comp_tokens.length - 1]
-        } else {
-            display = displayGame(game, false);
-        }
-
+        var outcome = displayOutcome(market, game.id, outcome_index);
 
         setSelectedOutcome({
             book: params.id,
             game_id: game.id,
             market: market,
             outcome_index: outcome_index,
-            display: `(${params.id}) ${display}`
+            display: `(${params.id}) ${outcome}`
         })
 
         setSelectedPrice(price)
@@ -156,7 +150,7 @@ function GameScreen(props: any) {
 
     return (
         <div className={`text-gray-200 bg-[${dark}] my-4`}>
-            <p className="px-4">{displayGame(game)}</p>
+            <p className="px-4">{displayGame(game.id)}</p>
             <DataGrid rows={rows} columns={cols} getRowHeight={() => 'auto'} hideFooter autoHeight
                 onCellClick={(params) => handleCellClick(params)}  // Add the event handler here
                 sx={{
@@ -207,39 +201,6 @@ function GameScreen(props: any) {
     );
 }
 
-function capitalize(str: string): string {
-    if (!str) return str; // Handle empty string or undefined/null values
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-}  
-
-function displayGame(game: any, show_time=true) {
-    const tokens = game.id.split("__");
-    const comp1_tokens = tokens[0].split("_")
-    const comp2_tokens = tokens[1].split("_")
-    const comp1 = comp1_tokens[comp1_tokens.length - 1]
-    const comp2 = comp2_tokens[comp2_tokens.length - 1]
-    if (!show_time) {
-        return `${capitalize(comp1)} vs. ${capitalize(comp2)}`
-    }
-    return `${capitalize(comp1)} vs. ${capitalize(comp2)} (${new Date(game.first_detected).toLocaleString()})`
-}
-
-function formatPrice(price: any) {
-    if (!price) {
-        return "-";
-    }
-    const seconds_ago = Math.floor((Date.now() - price.timestamp) / 1000)
-    if (price.spread_handicap) {
-        const hcap = (price.spread_handicap.plus ? '+' : '-') + price.spread_handicap.handicap;
-        return `(${seconds_ago}s)${hcap} ${price.odds}`
-    } else if (price.totals_handicap) {
-        const hcap = (price.totals_handicap.over ? 'O' : 'U') + price.totals_handicap.handicap;
-        return `(${seconds_ago}s)${hcap} ${price.odds}`
-    } else{
-        return `(${seconds_ago}s)${price.odds}`
-    }
-}
-
 // price1 and price2 are guaranteed to be the same outcome (spread1, total2, etc...)
 function comparePrices(weak_price: any, strong_price: any): string {
     var point_diff = 0;
@@ -249,7 +210,7 @@ function comparePrices(weak_price: any, strong_price: any): string {
     }
 
     if (strong_price.spread_handicap) {
-        if (strong_price.spread_handicap.plus) {
+        if (weak_price.spread_handicap.plus) {
             point_diff = weak_price.spread_handicap.handicap - strong_price.spread_handicap.handicap
         } else {
             point_diff = strong_price.spread_handicap.handicap - weak_price.spread_handicap.handicap
