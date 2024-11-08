@@ -94,10 +94,12 @@ function GameScreen(props: any) {
             const price1 = bookprices1[bookprices1.length - 1]
             const price2 = bookprices2[bookprices2.length - 1]
 
+            // console.log(selectedOutcome.game_id, game.id, selectedOutcome.book, book, selectedOutcome.market, market_id);
+
             if (selectedOutcome 
                 && selectedOutcome.game_id === game.game_id 
                 && selectedOutcome.book === book
-                && selectedOutcome.market === market_id.slice(0, -1)
+                && selectedOutcome.market === market_id
             ) {
                 if (selectedOutcome.outcome_index === 0) {
                     setSelectedPrice(price1)
@@ -163,6 +165,10 @@ function GameScreen(props: any) {
                     },
                     '& .MuiDataGrid-cell': {
                         color: light,  // Text color for cells
+                    },
+                    '& .MuiDataGrid-cell:hover': {
+                        backgroundColor: '#5d9c6e',  // Cell background color on hover
+                        cursor: 'pointer'
                     },
                     '& .MuiDataGrid-columnHeaders': {
                         backgroundColor: dark,  // Darker background for headers

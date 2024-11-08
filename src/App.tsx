@@ -73,7 +73,7 @@ const App: React.FC = () => {
   const [selectedWeak, setSelectedWeak] = useState<string>("betonline");
   const [bets, setBets] = useState<any[]>([]);
 
-  const [inputWsUrl, setInputWsUrl] = useState<string>("ws://localhost:8080"); // wss://diffui.duckdns.org
+  const [inputWsUrl, setInputWsUrl] = useState<string>("ws://localhost:8081"); // wss://diffui.duckdns.org
   const [connectedWsUrl, setConnectedWsUrl] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -156,7 +156,7 @@ const App: React.FC = () => {
           <option value="" disabled>
             league
           </option>
-          {["nba", "mlb", "nfl", "esports", "mexico_lmb"]
+          {["nba", "ncaa", "mlb", "nfl", "esports"]
             .map((league) => (
               <option key={league} value={league}>
                 {league}

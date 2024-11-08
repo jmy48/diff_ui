@@ -50,8 +50,12 @@ export function Betslip(props: any) {
   const [prevBet, setPrevBet] = React.useState<string>("");
   const { selectedOutcome, selectedPrice, betslipStatus, betslipResult, setBetslipResult, sendSignal } = props;
 
+  const outcomePriceId = selectedOutcome ? `${selectedOutcome.display} ${priceToString(selectedPrice)}` : null
   const handleSubmit = () => {
-    setPrevBet(`${selectedOutcome.display} ${priceToString(selectedPrice)}`)
+    if (!outcomePriceId) {
+      return;
+    }
+    setPrevBet(outcomePriceId)
     setBetslipResult("Betting...")
     sendSignal(size);
   }
@@ -63,7 +67,7 @@ export function Betslip(props: any) {
         <p className={`text-sm text-green-200`}>{`[${betslipStatus}]`}</p>
         <p className={`pl-2 text-sm text-green-200`}>
         {selectedOutcome ? 
-          `${selectedOutcome.display} ${priceToString(selectedPrice)}` : '[--]'}
+          outcomePriceId : '[--]'}
         </p>
       </div>
       {/** Add a "submit" button that calls sendSignal(size). also add an input that controls a size state variable defined in betslip */} 
@@ -71,7 +75,7 @@ export function Betslip(props: any) {
         <Button
           variant="contained"
           onClick={handleSubmit}
-          disabled={betslipStatus !== "Ready" || size < 0 || !selectedOutcome || !(selectedOutcome.book === "betonline" || selectedOutcome.book === "bovada")}
+          disabled={prevBet === outcomePriceId || size < 0 || !selectedOutcome || !(selectedOutcome.book === "betonline" || selectedOutcome.book === "bovada")}
           sx={{
             backgroundColor: '#16a34a', // Tailwind's blue-500
             minWidth: 'auto',
